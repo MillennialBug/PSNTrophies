@@ -1,10 +1,8 @@
 import bs4
 import requests
-from models import trophies, db
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+#from models import trophies, db
 
-USER = 'Pikey07'
+USER = 'PhobiaB13'
 
 res = requests.get('https://psnprofiles.com/' + USER + '/log')
 soup = bs4.BeautifulSoup(res.text, 'html.parser')
@@ -31,7 +29,7 @@ for y in range(1,int(maxpage[0].text.strip())):
 
         print(trophyID[x].text.strip()[1:] + ' ' + gameTitle[x]['title'] + ' ' + trophyTitle[x].text.strip())
 
-        row = trophies(Number = trophyID[x].text.strip()[1:],
+        '''row = trophies(Number = trophyID[x].text.strip()[1:],
                        Game   = gameTitle[x]['title'],
                        Name   = trophyTitle[x].text.strip(),
                        Text   = trophyText[x].text.strip()[len(trophyTitle[x].text.strip()):],
@@ -39,7 +37,7 @@ for y in range(1,int(maxpage[0].text.strip())):
                        Time   = trophyTime[x].text.strip(),
                        Rank   = trophyRank[x]['title'],
                        TrophyImage = trophyImage[x]['src'],
-                       GameImage   = gameTitle[x]['src'])
+                       GameImage   = gameTitle[x]['src'])'''
 
         #db.session.add(row)
         #db.session.commit()
