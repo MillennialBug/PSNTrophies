@@ -1,26 +1,50 @@
 import bs4
 import requests
+import sys
 #from selenium import webdriver
+#from selenium.webdriver.support.ui import WebDriverWait
+#from selenium.webdriver.support import expected_conditions as EC
+#from selenium.webdriver.common.by import By
 #from models import trophies, db
 
-USER = '' #Accept from user.
+psnprofiles = 'https://psnprofiles.com/'
+
+if(len(sys.argv > 1)):
+    USER = sys.argv[1]
+else:
+    USER = raw_input("Please enter your PSN ID.")
 
 #Selenium
 #browser = webdriver.ChromeOptions()
+#browser = webdriver.Remote("http://localhost:4444/wd/hub", webdriver.DesiredCapabilities.HTMLUNIT.copy())
 #browser.add_argument('headless')
-#psnId = browser.find_element_by_id('psnId')
-#psnId.send_keys(USER)
-#psnId.submit()
 
-#browser.get('https://psnprofiles.com')
+#try:
+#    browser.get('psnprofiles')
+#    psnId = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, 'psnId')))
+#except TimeoutException as ex:
+#    print('Timeout while trying to load ' + psnprofiles)
+#    browser.quit()
+#    print('Quitting...')
+#    exit()  
 
-res = requests.get('https://psnprofiles.com/' + USER + '/log')
+#try:
+#    psnId.send_keys(USER)
+#    psnId.submit()
+#    WebDriverWait(browser, 10).until(EC.title_contains("cheese!")) # Update EC condition
+#except TimeoutException as ex:
+#    print('Timeout while updating user "' + USER + '"')
+#    print('Please check that your PSN ID is spelt correctly and retry.')
+#    print('Quitting...')
+#    exit()
+
+res = requests.get(psnprofiles + USER + '/log')
 soup = bs4.BeautifulSoup(res.text, 'html.parser')
 maxpage = soup.select('#content > div > div > div.box.no-bottom-border > div > div > ul > li:nth-child(7) > a')
 
 for y in range(1,int(maxpage[0].text.strip())):
 
-    res = requests.get('https://psnprofiles.com/' + USER + '/log?dir=asc&page=' + str(y))
+    res = requests.get(psnprofiles + USER + '/log?dir=asc&page=' + str(y))
     res.raise_for_status()
     soup = bs4.BeautifulSoup(res.text, 'html.parser')
     trophiesOnPage = soup.select('.zebra > tr')
