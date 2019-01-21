@@ -1,12 +1,18 @@
 import bs4
 import requests
+#from selenium import webdriver
 #from models import trophies, db
 
 USER = '' #Accept from user.
 
 #Selenium
-#options = webdriver.ChromeOptions();
-#options.add_argument('headless');
+#browser = webdriver.ChromeOptions()
+#browser.add_argument('headless')
+#psnId = browser.find_element_by_id('psnId')
+#psnId.send_keys(USER)
+#psnId.submit()
+
+#browser.get('https://psnprofiles.com')
 
 res = requests.get('https://psnprofiles.com/' + USER + '/log')
 soup = bs4.BeautifulSoup(res.text, 'html.parser')
