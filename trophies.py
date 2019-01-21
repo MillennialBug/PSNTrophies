@@ -2,7 +2,11 @@ import bs4
 import requests
 #from models import trophies, db
 
-USER = 'PhobiaB13'
+USER = '' #Accept from user.
+
+#Selenium
+#options = webdriver.ChromeOptions();
+#options.add_argument('headless');
 
 res = requests.get('https://psnprofiles.com/' + USER + '/log')
 soup = bs4.BeautifulSoup(res.text, 'html.parser')
