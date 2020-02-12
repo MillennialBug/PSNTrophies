@@ -17,6 +17,7 @@ class trophies(db.Model):
     Date          = db.Column('Date',   db.Unicode)
     Time          = db.Column('Time',   db.Unicode)
     Rank          = db.Column('Rank',   db.Unicode)
+    GameHex       = db.Column('GameHex', db.Unicode, primary_key=True)
     TrophyImage   = db.Column('TrophyImage',  db.Unicode)
     GameImage     = db.Column('GameImage',    db.Unicode)
 
