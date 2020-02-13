@@ -1,10 +1,10 @@
 from flask import Flask
 from sys import platform
 from flask_sqlalchemy import SQLAlchemy
-from auth import engine_address_trophies
+from auth import database_addr
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = engine_address_trophies
+app.config['SQLALCHEMY_DATABASE_URI'] = database_addr
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app) 
 
