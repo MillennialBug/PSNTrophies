@@ -20,5 +20,5 @@ class trophies(db.Model):
     GameHex       = db.Column('GameHex', db.Unicode, primary_key=True)
     TrophyImage   = db.Column('TrophyImage',  db.Unicode)
     GameImage     = db.Column('GameImage',    db.Unicode)
-    User          = db.Column('User', db.Unicode)
+    User          = db.Column('User', db.Unicode, primary_key=True)
 
