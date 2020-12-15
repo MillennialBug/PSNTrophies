@@ -47,19 +47,19 @@ for y in range(1,int(maxpage[0].text.strip())+1):
         hexCode = re.search('^https:\/\/i.psnprofiles.com\/games\/(.*)\/trophies.*$',trophyImage[x]['src'])
         trophyImageFilename = re.split('\/',trophyImage[x]['src'])
 
-        if not os.path.exists('trophies/' + trophyImageFilename[6]):
+        if not os.path.exists('/home/pi/PSNTrophies/trophies/' + trophyImageFilename[6]):
             dl = get(trophyImage[x]['src'])
             if(dl.status_code == 200):
-                with open('trophies/' + trophyImageFilename[6],'wb') as timg:
+                with open('/home/pi/PSNTrophies/trophies/' + trophyImageFilename[6],'wb') as timg:
                     for chunk in dl.iter_content(200000):
                         timg.write(chunk)
                 timg.close()
 
         gameImageFilename = re.split('\/',gameTitle[x]['src'])
-        if not os.path.exists('games/' + gameImageFilename[5]):
+        if not os.path.exists('/home/pi/PSNTrophies/games/' + gameImageFilename[5]):
             dl = get(gameTitle[x]['src'])
             if(dl.status_code == 200):
-                with open('games/' + gameImageFilename[5],'wb') as timg:
+                with open('/home/pi/PSNTrophies/games/' + gameImageFilename[5],'wb') as timg:
                     for chunk in dl.iter_content(200000):
                         timg.write(chunk)
                 timg.close()
