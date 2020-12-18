@@ -5,9 +5,12 @@ import re
 from sqlalchemy.sql.expression import func
 import os.path
 from datetime import datetime
+from sys import platform
 
 PSNPROFILES = 'https://psnprofiles.com/'
 users = ('MillennialBug', 'Coggins3842', 'WorldWildeWest')
+PATH = {'linux': '/home/pi/',
+        'win32': 'c:/users/pj-wr/'}
 
 
 def format_datetime(date, time):
@@ -53,21 +56,21 @@ for user in users:
             # print(trophyID[x].text.strip()[1:] + ' ' + gameTitle[x]['title'] + ' ' + trophyTitle[x].text.strip())
 
             hexCode = re.search(r'^https://i.psnprofiles.com/games/(.*)/trophies.*$', trophyImage[x]['src'])
-            trophyImageFilename = re.split('\/', trophyImage[x]['src'])
+            trophyImageFilename = re.split(r'/', trophyImage[x]['src'])
 
-            if not os.path.exists('/home/pi/PSNTrophies/trophies/' + trophyImageFilename[6]):
+            if not os.path.exists(PATH[platform] + 'PSNTrophies/trophies/' + trophyImageFilename[6]):
                 dl = get(trophyImage[x]['src'])
                 if dl.status_code == 200:
-                    with open('/home/pi/PSNTrophies/trophies/' + trophyImageFilename[6], 'wb') as timg:
+                    with open(PATH[platform] + 'PSNTrophies/trophies/' + trophyImageFilename[6], 'wb') as timg:
                         for chunk in dl.iter_content(200000):
                             timg.write(chunk)
                     timg.close()
 
             gameImageFilename = re.split(r'/', gameTitle[x]['src'])
-            if not os.path.exists('/home/pi/PSNTrophies/games/' + gameImageFilename[5]):
+            if not os.path.exists(PATH[platform] + 'PSNTrophies/games/' + gameImageFilename[5]):
                 dl = get(gameTitle[x]['src'])
                 if dl.status_code == 200:
-                    with open('/home/pi/PSNTrophies/games/' + gameImageFilename[5], 'wb') as timg:
+                    with open(PATH[platform] + 'PSNTrophies/games/' + gameImageFilename[5], 'wb') as timg:
                         for chunk in dl.iter_content(200000):
                             timg.write(chunk)
                     timg.close()
@@ -78,7 +81,7 @@ for user in users:
                            Text=trophyText[x].text.strip()[len(trophyTitle[x].text.strip()):],
                            Date=trophyDate[x].text.strip(),
                            Time=trophyTime[x].text.strip(),
-                           DateTime=format_datetime(),
+                           DateTime=format_datetime(trophyDate[x].text.strip(), trophyTime[x].text.strip()),
                            Rank=trophyRank[x]['title'],
                            GameHex=hexCode.group(1),
                            TrophyImage=trophyImage[x]['src'],
