@@ -37,7 +37,9 @@ for user in users:
         count = len(trophiesOnPage)
         trophyID = soup.select('.zebra > tr > td:nth-child(5)')
 
-        if int(re.sub(',', '', trophyID[0].text.strip()[1:])) <= maxTrophy:
+        highest_on_page = int(re.sub(',', '', trophyID[0].text.strip()[1:]))
+
+        if highest_on_page <= maxTrophy:
             break
 
         gameTitle = soup.select('.zebra > tr > td > a > .game')
@@ -50,10 +52,12 @@ for user in users:
 
         for x in range(0, count):
 
-            if int(re.sub(',', '', trophyID[x].text.strip()[1:])) <= maxTrophy:
+            this_trophy_id = int(re.sub(',', '', trophyID[x].text.strip()[1:]))
+
+            if this_trophy_id <= maxTrophy:
                 break
 
-            # print(trophyID[x].text.strip()[1:] + ' ' + gameTitle[x]['title'] + ' ' + trophyTitle[x].text.strip())
+            print(f"{user} {this_trophy_id} {gameTitle[x]['title']} {trophyTitle[x].text.strip()}")
 
             hexCode = re.search(r'^https://i.psnprofiles.com/games/(.*)/trophies.*$', trophyImage[x]['src'])
             trophyImageFilename = re.split(r'/', trophyImage[x]['src'])
@@ -75,7 +79,7 @@ for user in users:
                             timg.write(chunk)
                     timg.close()
 
-            row = trophies(Number=re.sub(',', '', trophyID[x].text.strip()[1:]),
+            row = trophies(Number=this_trophy_id,
                            Game=gameTitle[x]['title'],
                            Name=trophyTitle[x].text.strip(),
                            Text=trophyText[x].text.strip()[len(trophyTitle[x].text.strip()):],
@@ -91,3 +95,6 @@ for user in users:
             db.session.add(row)
 
 db.session.commit()
+
+
+
