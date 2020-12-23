@@ -57,7 +57,7 @@ for user in users:
             if this_trophy_id <= maxTrophy:
                 break
 
-            print(f"{user} {this_trophy_id} {gameTitle[x]['title']} {trophyTitle[x].text.strip()}")
+            #print(f"{user} {this_trophy_id} {gameTitle[x]['title']} {trophyTitle[x].text.strip()}")
 
             hexCode = re.search(r'^https://i.psnprofiles.com/games/(.*)/trophies.*$', trophyImage[x]['src'])
             trophyImageFilename = re.split(r'/', trophyImage[x]['src'])
