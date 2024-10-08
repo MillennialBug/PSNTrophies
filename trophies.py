@@ -1,16 +1,12 @@
 from bs4 import BeautifulSoup
 from requests import get
+from cloudscraper import create_scraper
 from models import trophies, db
 import re
 from sqlalchemy.sql.expression import func
 import os.path
 from datetime import datetime
 from sys import platform
-
-PSNPROFILES = 'https://psnprofiles.com/'
-users = ('MillennialBug', 'Coggins3842', 'WorldWildeWest')
-PATH = {'linux': '/home/pi/',
-        'win32': 'c:/users/pj-wr/'}
 
 
 def format_datetime(date, time):
@@ -19,82 +15,90 @@ def format_datetime(date, time):
     return f'{dt.strftime("%Y-%m-%d")} {time}'
 
 
-for user in users:
-    maxTrophy = db.session.query(func.max(trophies.Number)).filter(trophies.User == user).scalar()
-    if maxTrophy is None:
-        maxTrophy = 0
+def update_db():
+    PSNPROFILES = 'https://psnprofiles.com/'
+    users = ('MillennialBug', 'Coggins3842', 'WorldWildeWest')
+    PATH = {'linux': '/home/pi/',
+        'win32': 'c:/users/pj-wr/'}
 
-    res = get(PSNPROFILES + user + '/log')
-    soup = BeautifulSoup(res.text, 'html.parser')
-    maxpage = soup.select('#content > div > div > div.box.no-bottom-border > div > div > ul > li:nth-child(7) > a')
+    scraper = create_scraper()
 
-    for y in range(1, int(maxpage[0].text.strip()) + 1):
+    for user in users:
+        maxTrophy = db.session.query(func.max(trophies.Number)).filter(trophies.User == user).scalar()
+        if maxTrophy is None:
+            maxTrophy = 0
 
-        res = get(PSNPROFILES + user + '/log?page=' + str(y))
-        res.raise_for_status()
+        res = scraper.get(PSNPROFILES + user + '/log')
         soup = BeautifulSoup(res.text, 'html.parser')
-        trophiesOnPage = soup.select('.zebra > tr')
-        count = len(trophiesOnPage)
-        trophyID = soup.select('.zebra > tr > td:nth-child(5)')
+        maxpage = soup.select('#content > div > div > div.box.no-bottom-border > div > div > ul > li:nth-child(7) > a')
 
-        highest_on_page = int(re.sub(',', '', trophyID[0].text.strip()[1:]))
+        for y in range(1, int(maxpage[0].text.strip()) + 1):
 
-        if highest_on_page <= maxTrophy:
-            break
+            res = scraper.get(PSNPROFILES + user + '/log?page=' + str(y))
+            res.raise_for_status()
+            soup = BeautifulSoup(res.text, 'html.parser')
+            trophiesOnPage = soup.select('.zebra > tr')
+            count = len(trophiesOnPage)
+            trophyID = soup.select('.zebra > tr > td:nth-child(5)')
 
-        gameTitle = soup.select('.zebra > tr > td > a > .game')
-        trophyTitle = soup.select('.zebra > tr > td:nth-child(3) > a')
-        trophyImage = soup.select('.zebra > tr > td:nth-child(2) > a > .trophy')
-        trophyText = soup.select('.zebra > tr > td:nth-child(3)')
-        trophyDate = soup.select('.zebra > tr > td:nth-child(6) > span > .typo-top-date')
-        trophyTime = soup.select('.zebra > tr > td:nth-child(6) > span > .typo-bottom-date')
-        trophyRank = soup.select('.zebra > tr > td:nth-child(10) > span > img')
+            highest_on_page = int(re.sub(',', '', trophyID[0].text.strip()[1:]))
 
-        for x in range(0, count):
-
-            this_trophy_id = int(re.sub(',', '', trophyID[x].text.strip()[1:]))
-
-            if this_trophy_id <= maxTrophy:
+            if highest_on_page <= maxTrophy:
                 break
 
-            print(f"{user} {this_trophy_id} {gameTitle[x]['title']} {trophyTitle[x].text.strip()}")
+            gameTitle = soup.select('.zebra > tr > td > a > .game')
+            trophyTitle = soup.select('.zebra > tr > td:nth-child(3) > a')
+            trophyImage = soup.select('.zebra > tr > td:nth-child(2) > a > .trophy')
+            trophyText = soup.select('.zebra > tr > td:nth-child(3)')
+            trophyDate = soup.select('.zebra > tr > td:nth-child(6) > span > .typo-top-date')
+            trophyTime = soup.select('.zebra > tr > td:nth-child(6) > span > .typo-bottom-date')
+            trophyRank = soup.select('.zebra > tr > td:nth-child(10) > span > img')
 
-            hexCode = re.search(r'^https://i.psnprofiles.com/games/(.*)/trophies.*$', trophyImage[x]['src'])
-            trophyImageFilename = re.split(r'/', trophyImage[x]['src'])
+            for x in range(0, count):
 
-            if not os.path.exists(PATH[platform] + 'PSNTrophies/trophies/' + trophyImageFilename[6]):
-                dl = get(trophyImage[x]['src'])
-                if dl.status_code == 200:
-                    with open(PATH[platform] + 'PSNTrophies/trophies/' + trophyImageFilename[6], 'wb') as timg:
-                        for chunk in dl.iter_content(200000):
-                            timg.write(chunk)
-                    timg.close()
+                this_trophy_id = int(re.sub(',', '', trophyID[x].text.strip()[1:]))
 
-            gameImageFilename = re.split(r'/', gameTitle[x]['src'])
-            if not os.path.exists(PATH[platform] + 'PSNTrophies/games/' + gameImageFilename[5]):
-                dl = get(gameTitle[x]['src'])
-                if dl.status_code == 200:
-                    with open(PATH[platform] + 'PSNTrophies/games/' + gameImageFilename[5], 'wb') as timg:
-                        for chunk in dl.iter_content(200000):
-                            timg.write(chunk)
-                    timg.close()
+                if this_trophy_id <= maxTrophy:
+                    break
 
-            row = trophies(Number=this_trophy_id,
-                           Game=gameTitle[x]['title'],
-                           Name=trophyTitle[x].text.strip(),
-                           Text=trophyText[x].text.strip()[len(trophyTitle[x].text.strip()):],
-                           Date=trophyDate[x].text.strip(),
-                           Time=trophyTime[x].text.strip(),
-                           DateTime=format_datetime(trophyDate[x].text.strip(), trophyTime[x].text.strip()),
-                           Rank=trophyRank[x]['title'],
-                           GameHex=hexCode.group(1),
-                           TrophyImage=trophyImage[x]['src'],
-                           GameImage=gameTitle[x]['src'],
-                           User=user)
+                print(f"{user} {this_trophy_id} {gameTitle[x]['title']} {trophyTitle[x].text.strip()}")
 
-            db.session.add(row)
+                hexCode = re.search(r'^https://i.psnprofiles.com/games/(.*)/trophies.*$', trophyImage[x]['src'])
+                trophyImageFilename = re.split(r'/', trophyImage[x]['src'])
 
-db.session.commit()
+                if not os.path.exists(PATH[platform] + 'PSNTrophies/trophies/' + trophyImageFilename[6]):
+                    dl = get(trophyImage[x]['src'])
+                    if dl.status_code == 200:
+                        with open(PATH[platform] + 'PSNTrophies/trophies/' + trophyImageFilename[6], 'wb') as timg:
+                            for chunk in dl.iter_content(200000):
+                                timg.write(chunk)
+                        timg.close()
 
+                gameImageFilename = re.split(r'/', gameTitle[x]['src'])
+                if not os.path.exists(PATH[platform] + 'PSNTrophies/games/' + gameImageFilename[5]):
+                    dl = get(gameTitle[x]['src'])
+                    if dl.status_code == 200:
+                        with open(PATH[platform] + 'PSNTrophies/games/' + gameImageFilename[5], 'wb') as timg:
+                            for chunk in dl.iter_content(200000):
+                                timg.write(chunk)
+                        timg.close()
 
+                row = trophies(Number=this_trophy_id,
+                               Game=gameTitle[x]['title'],
+                               Name=trophyTitle[x].text.strip(),
+                               Text=trophyText[x].text.strip()[len(trophyTitle[x].text.strip()):],
+                               Date=trophyDate[x].text.strip(),
+                               Time=trophyTime[x].text.strip(),
+                               DateTime=format_datetime(trophyDate[x].text.strip(), trophyTime[x].text.strip()),
+                               Rank=trophyRank[x]['title'],
+                               GameHex=hexCode.group(1),
+                               TrophyImage=trophyImage[x]['src'],
+                               GameImage=gameTitle[x]['src'],
+                               User=user)
 
+                db.session.add(row)
+
+    db.session.commit()
+    
+if __name__ == "__main__":
+    update_db()
